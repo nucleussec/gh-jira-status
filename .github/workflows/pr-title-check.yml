@@ -15,8 +15,8 @@ jobs:
             const prTitle = context.payload.pull_request.title;
             console.log(`PR Title: ${prTitle}`);
             
-            // Pattern: AUTO-<number>_<string with length more than 20 characters>
-            // Example: AUTO-123_This is a valid PR title with more than 20 chars
+            // Pattern: AUTO-<number>_<string with length more than 10 characters>
+            // Example: AUTO-123_This is a valid PR title with more than 10 chars
             const pattern = /^AUTO-\d+_.{10,}$/;
             
             if (!pattern.test(prTitle)) {
