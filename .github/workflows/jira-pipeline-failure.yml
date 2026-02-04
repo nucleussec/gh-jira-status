@@ -1,0 +1,98 @@
+name: Jira Pipeline Failure Handler
+
+on:
+  workflow_run:
+    workflows:
+      - "PR Title Check and Jira Status Update"
+    types:
+      - completed
+
+jobs:
+  handle-failure:
+    runs-on: ubuntu-latest
+    # Only run if the workflow failed
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get PR information
+        id: get-pr
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const workflowRun = context.payload.workflow_run;
+            
+            // Try to get PR from workflow run
+            let prNumber = workflowRun.pull_requests[0]?.number;
+            
+            if (!prNumber) {
+              // If no PR directly associated, try to find it from head branch
+              const headBranch = workflowRun.head_branch;
+              const headSha = workflowRun.head_sha;
+              
+              console.log(`Looking for PR with head branch: ${headBranch}, SHA: ${headSha}`);
+              
+              const { data: prs } = await github.rest.pulls.list({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'open',
+                head: `${context.repo.owner}:${headBranch}`
+              });
+              
+              if (prs.length > 0) {
+                prNumber = prs[0].number;
+              }
+            }
+            
+            if (!prNumber) {
+              console.log('No PR associated with this workflow run');
+              core.setOutput('has_pr', 'false');
+              return;
+            }
+            
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber
+            });
+            
+            core.setOutput('has_pr', 'true');
+            core.setOutput('pr_title', pr.title);
+            core.setOutput('pr_number', prNumber);
+            console.log(`PR #${prNumber}: ${pr.title}`);
+
+      - name: Extract Jira ticket from PR title
+        if: steps.get-pr.outputs.has_pr == 'true'
+        id: extract-jira
+        run: |
+          PR_TITLE="${{ steps.get-pr.outputs.pr_title }}"
+          # Remove [HOTFIX] prefix if present
+          PR_TITLE=$(echo "$PR_TITLE" | sed 's/^\[HOTFIX\] //')
+
+          if [[ $PR_TITLE =~ ^(NUCLEUS|AUTO)-([0-9]+)_ ]]; then
+            JIRA_TICKET="${BASH_REMATCH[1]}-${BASH_REMATCH[2]}"
+            echo "has_jira=true" >> $GITHUB_OUTPUT
+            echo "ticket=$JIRA_TICKET" >> $GITHUB_OUTPUT
+            echo "✅ Jira ticket found: $JIRA_TICKET"
+          else
+            echo "has_jira=false" >> $GITHUB_OUTPUT
+            echo "ℹ️  No Jira ticket in PR title, skipping"
+          fi
+
+      - name: Move ticket to Changes Requested
+        if: steps.extract-jira.outputs.has_jira == 'true'
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+        run: |
+          FAILED_RUN_URL="${{ github.event.workflow_run.html_url }}"
+          
+          bash .github/scripts/move-to-changes-requested.sh \
+            "${{ steps.extract-jira.outputs.ticket }}" \
+            "$JIRA_BASE_URL" \
+            "$JIRA_EMAIL" \
+            "$JIRA_API_TOKEN" \
+            "$FAILED_RUN_URL"
+
