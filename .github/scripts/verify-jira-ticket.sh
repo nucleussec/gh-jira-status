@@ -9,7 +9,7 @@ JIRA_EMAIL="$3"
 JIRA_API_TOKEN="$4"
 
 # Statuses that allow transition to "Review"
-ALLOWED_STATUSES=("BACKLOG" "IN PROGRESS" "SELECTED FOR DEVELOPMENT")
+ALLOWED_STATUSES=("Backlog" "In Progress" "Selected for Development")
 
 # Validate required parameters
 if [ -z "$JIRA_TICKET" ]; then
