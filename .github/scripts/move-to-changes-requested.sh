@@ -9,7 +9,7 @@ JIRA_BASE_URL="$2"
 JIRA_EMAIL="$3"
 JIRA_API_TOKEN="$4"
 FAILED_RUN_URL="$5"
-
+TRANSITION_ID="21" # This is the transition id for "Selected for Development" in my case. It should be replaced with "Changes Requested" when it will be implemented.
 # Statuses that should trigger move to "Changes Requested" on pipeline failure
 # These are statuses beyond "Self Review" in the workflow
 TRIGGER_STATUSES=(
@@ -81,31 +81,6 @@ fi
 
 echo "⚠️  Pipeline failed while ticket is in '$CURRENT_STATUS'"
 echo "Moving ticket to 'Changes Requested'..."
-
-# Get available transitions to find "Changes Requested" transition ID
-TRANSITIONS_RESPONSE=$(curl -s -L -w "\nHTTP_CODE=%{http_code}" \
-    -u "${JIRA_EMAIL}:${JIRA_API_TOKEN}" \
-    -H "Accept: application/json" \
-    "${JIRA_BASE_URL}/rest/api/3/issue/${JIRA_TICKET}/transitions")
-
-HTTP_CODE=$(echo "$TRANSITIONS_RESPONSE" | grep "HTTP_CODE=" | cut -d'=' -f2)
-TRANSITIONS_BODY=$(echo "$TRANSITIONS_RESPONSE" | sed '/HTTP_CODE=/d')
-
-if [ "$HTTP_CODE" != "200" ]; then
-    echo "❌ Failed to fetch transitions. HTTP Status: $HTTP_CODE"
-    echo "Response: $TRANSITIONS_BODY"
-    exit 1
-fi
-
-# Find the "Changes Requested" transition ID
-TRANSITION_ID=$(echo "$TRANSITIONS_BODY" | jq -r '.transitions[] | select(.name == "Changes Requested") | .id' | head -n1)
-
-if [ -z "$TRANSITION_ID" ] || [ "$TRANSITION_ID" == "null" ]; then
-    echo "⚠️  'Changes Requested' transition not available from current status"
-    echo "Available transitions:"
-    echo "$TRANSITIONS_BODY" | jq -r '.transitions[] | "  - \(.name) (id: \(.id))"'
-    exit 1
-fi
 
 echo "Found 'Changes Requested' transition with ID: $TRANSITION_ID"
 

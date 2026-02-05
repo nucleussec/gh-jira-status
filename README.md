@@ -43,3 +43,28 @@ Check current status → Is it beyond Self Review?
        ↓
   YES → Move to "Changes Requested" + Add comment with link
   NO  → Do nothing (ticket stays in current status)
+
+
+TRANSITION_CODES:
+[
+  {
+    "name": "Backlog",
+    "id": "11"
+  },
+  {
+    "name": "Selected for Development",
+    "id": "21"
+  },
+  {
+    "name": "In Progress",
+    "id": "31"
+  },
+  {
+    "name": "Done",
+    "id": "41"
+  },
+  {
+    "name": "Review",
+    "id": "51"
+  }
+]
