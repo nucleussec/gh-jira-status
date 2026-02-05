@@ -13,6 +13,7 @@ TRANSITION_ID="21" # This is the transition id for "Selected for Development" in
 # Statuses that should trigger move to "Changes Requested" on pipeline failure
 # These are statuses beyond "Self Review" in the workflow
 TRIGGER_STATUSES=(
+    "Review"  # @ TODO: This should be removed. Only for testing purposes.
     "Code Review"
     "Design Review"
     "QA Review"
