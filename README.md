@@ -43,7 +43,7 @@ The workflow runs whenever a PR is:
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │  Job 1: check-pr-title                                                      │
 │  ────────────────────                                                       │
-│  • Validates PR title format matches: [HOTFIX] PROJECT-123_description      │
+│  • Validates PR title format matches: [HOTFIX] PROJECT-123_description      │  --> link to documentation https://nucleussec.atlassian.net/wiki/spaces/NUC/pages/464715781/Commits+PR+Checklist#Commits
 │  • Validates branch name format                                             │
 │  • Supported projects: NUCLEUS, AUTO                                        │
 └─────────────────────────────────────────────────────────────────────────────┘
