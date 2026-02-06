@@ -20,7 +20,6 @@ TRIGGER_STATUSES=(
     "QA In Progress"
     "Stakeholder Review"
     "Stakeholder Approved"
-    "Merged Into Develop"
 )
 
 # Validate required parameters
