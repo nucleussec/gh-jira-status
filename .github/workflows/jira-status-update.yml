@@ -22,6 +22,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Get target branch name
+        id: get-target-branch
+        run: |
+          TARGET_BRANCH="${{ github.event.pull_request.base.ref }}"
+          echo "branch=$TARGET_BRANCH" >> $GITHUB_OUTPUT
+          echo "🎯 Target branch: $TARGET_BRANCH"
+
       - name: Extract Jira ticket from PR title
         id: extract-jira
         run: |
